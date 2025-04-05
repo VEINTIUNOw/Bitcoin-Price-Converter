@@ -2,86 +2,51 @@
 /*
 Plugin Name: Bitcoin Price Converter
 Plugin URI: https://wordpress.org/plugins/bitcoin-price-converter
-Description: Converts WooCommerce product prices to Bitcoin using exchange rates. Settings available from the admin sidebar menu <code> <a href="/wp-admin/admin.php?page=bitcoin_price_converter_settings">Woocommerce > Bitcoin Converter</a> </code>. Source code on <a href="https://github.com/SuperAtic-LABS/Bitcoin-Price-Converter target="_blank">GitHub</a>.
-Version: 1.1.3
-Author: SuperAtic
-Author URI: http://SuperAtic.com
+Description: Converts WooCommerce product prices to Bitcoin using exchange rates. Settings available from the admin sidebar menu <code> <a href="/wp-admin/admin.php?page=bitcoin_price_converter_settings">Woocommerce > Bitcoin Converter</a> </code>.
+Version: 1.1.4
+Author: VEINTIUNOw
+Author URI: http://VEINTIUO.BTC.pub
 */
 
 // Enqueue Font Awesome script
 add_action('wp_enqueue_scripts', 'bitcoin_price_converter_enqueue_fontawesome');
 function bitcoin_price_converter_enqueue_fontawesome() {
-    // wp_enqueue_script('font-awesome', 'https://kit.fontawesome.com/090ca49637.js', array(), '5.15.3', false);
-    wp_enqueue_script('font-awesome', '/wp-content/plugins/bitcoin-price-converter/satsymbol.com-kit090ca49637.js', array(), '5.15.3', false);
+    wp_enqueue_script('font-awesome', 'https://kit.fontawesome.com/090ca49637.js', array(), '5.15.3', false);
 }
 
 // Add Bitcoin price conversion to WooCommerce product display
 add_filter('woocommerce_get_price_html', 'convert_price_to_bitcoin', 10, 2);
 function convert_price_to_bitcoin($price_html, $product) {
-    // Get the current Bitcoin exchange rate
     $bitcoin_rate = get_bitcoin_exchange_rate();
+    if (!$bitcoin_rate) return $price_html;
 
-    // Get plugin settings
     $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
     $show_fiat_price = get_option('show_fiat_price', true);
+    $price = floatval($product->get_price());
+    $price_in_bitcoin = $price / $bitcoin_rate;
+    $formatted_price = format_bitcoin_price($price_in_bitcoin, $bitcoin_denomination);
 
-    // Check if the product is on sale
-    if ($product->is_on_sale()) {
-        // Get the sale price
-        $sale_price = floatval($product->get_sale_price());
-
-        // Convert the sale price to Bitcoin
-        $sale_price_in_bitcoin = $sale_price / $bitcoin_rate;
-
-        // Format the converted sale price
-        $formatted_sale_price = format_bitcoin_price($sale_price_in_bitcoin, $bitcoin_denomination);
-
-        // Append the converted sale price to the original price HTML
-        $converted_price_html = $formatted_sale_price;
-
-        if ($show_fiat_price) {
-            $converted_price_html .= ' <br/><small class="grey">' . $price_html . '</small>';
-        }
-    } else {
-        // Convert the price to Bitcoin
-        $price = floatval($product->get_price());
-        $price_in_bitcoin = $price / $bitcoin_rate;
-
-        // Format the converted price
-        $formatted_price = format_bitcoin_price($price_in_bitcoin, $bitcoin_denomination);
-
-        // Append the converted price to the original price HTML
-        $converted_price_html = $formatted_price;
-
-        if ($show_fiat_price) {
-            $converted_price_html .= ' <br/><small class="grey">' . $price_html . '</small>';
-        }
+    $converted_price_html = $formatted_price;
+    if ($show_fiat_price) {
+        $converted_price_html .= ' <br/><small class="grey">' . $price_html . '</small>';
     }
 
     return $converted_price_html;
 }
 
-// Convert prices on the cart page
+// Convert prices on the cart and checkout pages
 add_filter('woocommerce_cart_item_price', 'convert_cart_item_price', 10, 3);
+add_filter('woocommerce_checkout_cart_item_quantity', 'convert_cart_item_price', 10, 3);
 function convert_cart_item_price($price_html, $cart_item, $cart_item_key) {
     $product = $cart_item['data'];
     $price = floatval($product->get_price());
     $bitcoin_rate = get_bitcoin_exchange_rate();
-    $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
-    $price_in_bitcoin = $price / $bitcoin_rate;
-    $converted_price_html = format_bitcoin_price($price_in_bitcoin, $bitcoin_denomination);
-    return $converted_price_html;
-}
+    if (!$bitcoin_rate) return $price_html;
 
-// Convert prices on the checkout page
-add_filter('woocommerce_checkout_cart_item_quantity', 'convert_checkout_item_price', 10, 3);
-function convert_checkout_item_price($item_qty_html, $cart_item, $cart_item_key) {
-    $product = $cart_item['data'];
-    $price = floatval($product->get_price());
-    $bitcoin_rate = get_bitcoin_exchange_rate();
     $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
     $price_in_bitcoin = $price / $bitcoin_rate;
     $converted_price_html = format_bitcoin_price($price_in_bitcoin, $bitcoin_denomination);
+
     return $converted_price_html;
 }
 
@@ -91,20 +56,20 @@ add_filter('woocommerce_checkout_cart_subtotal', 'convert_cart_totals', 10, 3);
 function convert_cart_totals($subtotal_html, $cart_item, $cart_item_key) {
     $price = floatval($cart_item['line_total']);
     $bitcoin_rate = get_bitcoin_exchange_rate();
+    if (!$bitcoin_rate) return $subtotal_html;
+
     $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
     $price_in_bitcoin = $price / $bitcoin_rate;
     $converted_price_html = format_bitcoin_price($price_in_bitcoin, $bitcoin_denomination);
+
     return $converted_price_html;
 }
 
 // Get the current Bitcoin exchange rate from the selected source or custom URL
 function get_bitcoin_exchange_rate() {
     $exchange_rate_source = get_option('exchange_rate_source', 'coindesk');
-
-    // Check if exchange rate data is stored locally and not expired
     $stored_exchange_rate = get_option('bitcoin_exchange_rate');
     $stored_exchange_rate_timestamp = get_option('bitcoin_exchange_rate_timestamp');
-
     $current_timestamp = time();
     $ten_minutes_in_seconds = 10 * 60; // 10 minutes
 
@@ -112,6 +77,7 @@ function get_bitcoin_exchange_rate() {
         return $stored_exchange_rate;
     }
 
+    $api_url = '';
     switch ($exchange_rate_source) {
         case 'coindesk':
             $api_url = 'https://api.coindesk.com/v1/bpi/currentprice/BTC.json';
@@ -122,20 +88,14 @@ function get_bitcoin_exchange_rate() {
         case 'custom':
             $api_url = get_option('custom_exchange_rate_url');
             break;
-        default:
-            $api_url = '';
-            break;
     }
 
     if (empty($api_url)) {
         return false;
     }
 
-    // Fetch the exchange rate data
     $response = wp_remote_get($api_url);
-
     if (is_wp_error($response)) {
-        // Error handling if the API request fails
         return false;
     }
 
@@ -143,27 +103,20 @@ function get_bitcoin_exchange_rate() {
     $data = json_decode($body, true);
 
     if (!empty($data)) {
+        $rate = false;
         switch ($exchange_rate_source) {
             case 'coindesk':
-                if (isset($data['bpi']['USD']['rate_float'])) {
-                    // Store the exchange rate and timestamp locally
-                    update_option('bitcoin_exchange_rate', $data['bpi']['USD']['rate_float']);
-                    update_option('bitcoin_exchange_rate_timestamp', $current_timestamp);
-
-                    // Return the current Bitcoin exchange rate
-                    return $data['bpi']['USD']['rate_float'];
-                }
+                $rate = $data['bpi']['USD']['rate_float'] ?? false;
                 break;
             case 'coingecko':
-                if (isset($data['bitcoin']['usd'])) {
-                    // Store the exchange rate and timestamp locally
-                    update_option('bitcoin_exchange_rate', $data['bitcoin']['usd']);
-                    update_option('bitcoin_exchange_rate_timestamp', $current_timestamp);
-
-                    // Return the current Bitcoin exchange rate
-                    return $data['bitcoin']['usd'];
-                }
+                $rate = $data['bitcoin']['usd'] ?? false;
                 break;
+        }
+
+        if ($rate) {
+            update_option('bitcoin_exchange_rate', $rate);
+            update_option('bitcoin_exchange_rate_timestamp', $current_timestamp);
+            return $rate;
         }
     }
 
@@ -173,13 +126,13 @@ function get_bitcoin_exchange_rate() {
 // Format the Bitcoin price based on the selected denomination
 function format_bitcoin_price($price, $denomination) {
     switch ($denomination) {
-        case 'milliBTC (mBTC)':
+        case 'mBTC':
             $formatted_price = number_format($price * 1000, 2, '.', ',') . ' mBTC';
             break;
         case 'sats':
-            $formatted_price = number_format($price * 100000000, 0, '.', ',') . ' <i class="fak fa-sm fa-satoshisymbol-solid"></i>';
+            $formatted_price = number_format($price * 100000000, 0, '.', ',') . ' sats';
             break;
-        case 'Bitcoin ()':
+        case 'BTC':
         default:
             $formatted_price = '₿ ' . number_format($price, 8, '.', ',');
             break;
@@ -190,7 +143,6 @@ function format_bitcoin_price($price, $denomination) {
 
 // Add plugin settings page to the admin menu
 add_action('admin_menu', 'bitcoin_price_converter_settings_page');
-
 function bitcoin_price_converter_settings_page() {
     add_submenu_page(
         'woocommerce',
@@ -204,27 +156,22 @@ function bitcoin_price_converter_settings_page() {
 
 // Callback function to render the plugin settings page
 function bitcoin_price_converter_settings_callback() {
-    // Check if the user has permissions to access the settings
     if (!current_user_can('manage_options')) {
         return;
     }
 
-    // Save the settings if the form is submitted
     if (isset($_POST['submit'])) {
         update_option('bitcoin_denomination', $_POST['bitcoin_denomination']);
         update_option('show_fiat_price', isset($_POST['show_fiat_price']));
         update_option('exchange_rate_source', $_POST['exchange_rate_source']);
-
         if ($_POST['exchange_rate_source'] === 'custom') {
             update_option('custom_exchange_rate_url', $_POST['custom_exchange_rate_url']);
         } else {
             delete_option('custom_exchange_rate_url');
         }
-
         echo '<div class="notice notice-success"><p>Settings saved successfully!</p></div>';
     }
 
-    // Retrieve the current settings
     $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
     $show_fiat_price = get_option('show_fiat_price', true);
     $exchange_rate_source = get_option('exchange_rate_source', 'coindesk');
@@ -233,16 +180,13 @@ function bitcoin_price_converter_settings_callback() {
     $sample_price_in_bitcoin = $sample_fiat_price / get_bitcoin_exchange_rate();
     ?>
     <div class="wrap">
-        <script src="https://kit.fontawesome.com/090ca49637.js" crossorigin="anonymous"></script>
         <h1>Bitcoin Price Converter Settings</h1>
-
         <h2>Preview</h2>
         <p>Sample Price in Fiat: $<?php echo number_format($sample_fiat_price, 2, '.', ','); ?></p>
-        <p>Sample Price in Bitcoin: <?php echo format_bitcoin_price($sample_price_in_bitcoin, 'BTC ₿'); ?></p>
-        <p>Sample Price in milli Bitcoin: <?php echo format_bitcoin_price($sample_price_in_bitcoin, 'milliBTC (mBTC)'); ?></p>
+        <p>Sample Price in Bitcoin: <?php echo format_bitcoin_price($sample_price_in_bitcoin, 'BTC'); ?></p>
+        <p>Sample Price in milli Bitcoin: <?php echo format_bitcoin_price($sample_price_in_bitcoin, 'mBTC'); ?></p>
         <p>Sample Price in satoshis: <?php echo format_bitcoin_price($sample_price_in_bitcoin, 'sats'); ?></p>
         <hr>
-
         <form method="post" action="">
             <table class="form-table">
                 <tr valign="top">
@@ -279,18 +223,15 @@ function bitcoin_price_converter_settings_callback() {
                     </td>
                 </tr>
             </table>
-
             <p class="submit">
                 <input type="submit" name="submit" class="button-primary" value="Save Settings">
             </p>
         </form>
     </div>
     <script>
-        // Toggle custom URL field based on the selected exchange rate source
         (function ($) {
             $(document).ready(function () {
                 var exchangeRateSource = $('#exchange_rate_source');
-
                 exchangeRateSource.on('change', function () {
                     if (exchangeRateSource.val() === 'custom') {
                         $('[name="custom_exchange_rate_url"]').closest('tr').show();
@@ -298,7 +239,6 @@ function bitcoin_price_converter_settings_callback() {
                         $('[name="custom_exchange_rate_url"]').closest('tr').hide();
                     }
                 });
-
                 if (exchangeRateSource.val() === 'custom') {
                     $('[name="custom_exchange_rate_url"]').closest('tr').show();
                 }
@@ -330,13 +270,11 @@ function save_bitcoin_as_unit_of_account($post_id) {
 add_filter('woocommerce_get_price_html', 'display_bitcoin_denomination_in_price', 100, 2);
 function display_bitcoin_denomination_in_price($price_html, $product) {
     $bitcoin_as_unit_of_account = get_post_meta($product->get_id(), '_bitcoin_as_unit_of_account', true);
-
     if ($bitcoin_as_unit_of_account === 'yes') {
         $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
         $price_in_bitcoin = $product->get_price() / get_bitcoin_exchange_rate();
         $price_html = '(' . format_bitcoin_price($price_in_bitcoin, $bitcoin_denomination) . ')';
     }
-
     return $price_html;
 }
 
@@ -345,6 +283,8 @@ add_action('woocommerce_review_order_after_order_total', 'display_total_price_in
 function display_total_price_in_bitcoin() {
     $total_price_in_fiat = WC()->cart->total;
     $bitcoin_rate = get_bitcoin_exchange_rate();
+    if (!$bitcoin_rate) return;
+
     $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
     $total_price_in_bitcoin = $total_price_in_fiat / $bitcoin_rate;
     $total_price_html = format_bitcoin_price($total_price_in_bitcoin, $bitcoin_denomination);
@@ -360,8 +300,7 @@ function display_total_price_in_bitcoin() {
 add_action('plugins_loaded', 'update_bitcoin_price_converter_version');
 function update_bitcoin_price_converter_version() {
     $current_version = get_option('bitcoin_price_converter_version', '1.0.0');
-    $new_version = '1.1.3';
-
+    $new_version = '1.1.4';
     if ($current_version !== $new_version) {
         update_option('bitcoin_price_converter_version', $new_version);
     }
