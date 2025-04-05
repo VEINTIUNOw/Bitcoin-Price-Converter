@@ -15,7 +15,7 @@ Settings available from the admin sidebar menu <code> <a href="/wp-admin/admin.p
 
 Source code on <a href="https://github.com/VEINTIUNOw/Bitcoin-Price-Converter" target="_blank">GitHub</a>.
 
-Demo on [site](https://veintiuno.world/m/digitales/bitcoin-price-co…ocommerce-plugin/)
+Demo on [site](https://veintiuno.BTC.pub/m/digitales/bitcoin-price-co…ocommerce-plugin/)
 
 Donate on [Geyser](https://geyser.fund/project/bitcoinpriceconverterwordpressplugin)
 
