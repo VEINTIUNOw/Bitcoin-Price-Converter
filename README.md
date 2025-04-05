@@ -1,6 +1,4 @@
-Contributors: superatic
 Tags: bitcoin, btc converter, bitcoin price
-Donate link: https://superatic.com/pay
 Requires at least: 4.9
 Tested up to: 4.9.1
 Stable tag: trunk
@@ -15,7 +13,7 @@ Converts WooCommerce product prices to Bitcoin using real-time exchange rates. T
 
 Settings available from the admin sidebar menu <code> <a href="/wp-admin/admin.php?page=bitcoin_price_converter_settings">Woocommerce > Bitcoin Converter</a> </code>. 
 
-Source code on <a href="https://github.com/SuperAtic-LABS/Bitcoin-Price-Converter" target="_blank">GitHub</a>.
+Source code on <a href="https://github.com/VEINTIUNOw/Bitcoin-Price-Converter" target="_blank">GitHub</a>.
 
 Demo on [site](https://veintiuno.world/m/digitales/bitcoin-price-co…ocommerce-plugin/)
 
@@ -55,7 +53,7 @@ For queries or support requests, please contact us at support@example.com.
 
 ## Contributing to the Plugin
 
-Bitcoin Price Converter is an open-source project, and we welcome contributions from the community. You can find the plugin's source code on [GitHub](https://github.com/SuperAtic-LABS/Bitcoin-Price-Converter). If you encounter any issues or have suggestions for improvements, feel free to submit a pull request or open an issue on the GitHub repository.
+Bitcoin Price Converter is an open-source project, and we welcome contributions from the community. You can find the plugin's source code on [GitHub](https://github.com/VEINTIUNOw/Bitcoin-Price-Converter). If you encounter any issues or have suggestions for improvements, feel free to submit a pull request or open an issue on the GitHub repository.
 
 ## Spread the Word
 
@@ -67,7 +65,7 @@ If you appreciate the work we put into developing and maintaining this plugin, y
 
 ## Stay Updated
 
-Follow us on Twitter [@SuperAticLabs](https://twitter.com/SuperAticLabs) for updates, announcements, and future enhancements.
+Follow us on [X](https://twitter.com/VEINTIUNOw) or [nostr](https://snort.social/21) for updates, announcements, and future enhancements.
 
 ## Version History
 
@@ -86,7 +84,7 @@ Bitcoin Price Converter is distributed under the [GPLv2 or later](https://www.gn
 
 ## Credits
 
-Bitcoin Price Converter is developed and maintained by SuperAtic. We especially appreciate the WordPress community and contributors who have helped improve the plugin.
+Bitcoin Price Converter is developed and maintained by VEINTIUNOw. We especially appreciate the WordPress community and contributors who have helped improve the plugin.
 
 ## Disclaimer
 
@@ -104,7 +102,7 @@ For support or inquiries, please email us at support@example.com or visit our su
 - **1.0.0:** Initial release of Bitcoin Price Converter.
 
 .
-![](https://github.com/SuperAtic-LABS/Bitcoin-Price-Converter/blob/main/screenshot-1.png)
-![](https://github.com/SuperAtic-LABS/Bitcoin-Price-Converter/blob/main/screenshot-2.png)
-![](https://github.com/SuperAtic-LABS/Bitcoin-Price-Converter/blob/main/screenshot-3.png)
-![](https://github.com/SuperAtic-LABS/Bitcoin-Price-Converter/blob/main/screenshot-4.png)
+![](https://github.com/VEINTIUNOw/Bitcoin-Price-Converter/blob/main/screenshot-1.png)
+![](https://github.com/VEINTIUNOw/Bitcoin-Price-Converter/blob/main/screenshot-2.png)
+![](https://github.com/VEINTIUNOw/Bitcoin-Price-Converter/blob/main/screenshot-3.png)
+![](https://github.com/VEINTIUNOw/Bitcoin-Price-Converter/blob/main/screenshot-4.png)
