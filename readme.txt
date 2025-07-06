@@ -6,7 +6,7 @@ Tested up to: 6.8
 Stable tag: 1.0.0
 Requires PHP: 7.4
 License: GPLv3 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 A simple Bitcoin price converter widget that displays current Bitcoin prices and allows conversion between BTC and various fiat currencies.
 
