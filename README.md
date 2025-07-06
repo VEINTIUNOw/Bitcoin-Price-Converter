@@ -18,7 +18,7 @@ Settings available from the admin sidebar menu: [Woocommerce > Bitcoin Converter
 
 - **Source code on [GitHub](https://github.com/VEINTIUNOw/Bitcoin-Price-Converter)**
 - **Demo on [site](https://veintiuno.BTC.pub/m/digitales/bitcoin-price-co%E2%80%A6ocommerce-plugin/)**
-- **Donate on [Geyser](https://geyser.fund/project/bitcoinpriceconverterwordpressplugin)**
+- **Donate sats or contribute from https://VEINTIUNO.btc.pub/participa/#patrocinador
 
 ## Features
 
