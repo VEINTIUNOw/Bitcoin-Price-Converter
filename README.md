@@ -1,7 +1,7 @@
 # Bitcoin Price Converter
 
 **Contributors:** VEINTIUNOw  
-**Donate link:** https://geyser.fund/project/bitcoinpriceconverterwordpressplugin  
+**Donate link:** https://VEINTIUNO.btc.pub/participa/#patrocinador
 **Tags:** bitcoin, btc converter, bitcoin price  
 **Requires at least:** 4.9  
 **Tested up to:** 6.6  
@@ -120,7 +120,7 @@ Bitcoin Price Converter is provided "as is" without any warranty. We are not res
 
 For support or inquiries, reach out via [X](https://x.com/VEINTIUNOw) or [nostr](https://snort.social/21) or visit our support forum on [WordPress.org](#).
 
-.
+## Screenshots
 ![](https://github.com/VEINTIUNOw/Bitcoin-Price-Converter/blob/main/screenshot-1.png)
 ![](https://github.com/VEINTIUNOw/Bitcoin-Price-Converter/blob/main/screenshot-2.png)
 ![](https://github.com/VEINTIUNOw/Bitcoin-Price-Converter/blob/main/screenshot-3.png)
