@@ -1,111 +1,54 @@
 # Bitcoin Price Converter
 
 **Contributors:** VEINTIUNOw  
-**Donate link:** https://VEINTIUNO.btc.pub/participa/#patrocinador  
-**Tags:** bitcoin, cryptocurrency, price converter, widget, shortcode, btc converter, bitcoin price  
-**Requires at least:** 5.0  
-**Tested up to:** 6.8  
-**Stable tag:** 1.0.0  
-**Requires PHP:** 7.4  
-**License:** GPLv3 or later  
-**License URI:** http://www.gnu.org/licenses/gpl-3.0.html  
-**Version:** 1.0.0  
+**Donate link:** https://VEINTIUNO.btc.pub/participa/#patrocinador
+**Tags:** bitcoin, btc converter, bitcoin price  
+**Requires at least:** 4.9  
+**Tested up to:** 6.6  
+**Stable tag:** 1.1.5  
+**Requires PHP:** 5.6  
+**License:** GPLv2 or later  
+**License URI:** http://www.gnu.org/licenses/gpl-2.0.html  
+**Version:** 1.1.5  
 
 ## Description
+Converts WooCommerce product prices to Bitcoin using real-time exchange rates. This plugin allows customers to view prices in Bitcoin with the selected denomination (BTC, mBTC, or sats) and displays the equivalent fiat price alongside it.
 
-A simple and elegant Bitcoin price converter widget that displays current Bitcoin prices and allows conversion between BTC and various fiat currencies. Perfect for cryptocurrency blogs, financial websites, or any site that needs to display Bitcoin pricing information.
+Settings available from the admin sidebar menu: [Woocommerce > Bitcoin Converter](wp-admin/admin.php?page=bitcoin_price_converter_settings)
 
-Unlike WooCommerce-specific converters, this plugin provides a universal Bitcoin price display widget that can be used anywhere on your WordPress site with a simple shortcode.
-
-**Source code on [GitHub](https://github.com/VEINTIUNOw/Bitcoin-Price-Converter)**  
-**Demo on [site](https://veintiuno.BTC.pub/m/digitales/bitcoin-price-converter-wordpress-plugin/)**  
-**Donate sats or contribute from https://VEINTIUNO.btc.pub/participa/#patrocinador**
+- **Source code on [GitHub](https://github.com/VEINTIUNOw/Bitcoin-Price-Converter)**
+- **Demo on [site](https://veintiuno.BTC.pub/m/digitales/bitcoin-price-co%E2%80%A6ocommerce-plugin/)**
+- **Donate sats or contribute from https://VEINTIUNO.btc.pub/participa/#patrocinador
 
 ## Features
 
-- **Real-time Bitcoin Price Display:** Shows current Bitcoin prices using reliable API sources
-- **Multi-Currency Support:** Convert between Bitcoin and 10 major fiat currencies
-- **Bi-directional Conversion:** Convert from Bitcoin to fiat and vice versa
-- **Responsive Design:** Works perfectly on desktop, tablet, and mobile devices
-- **Customizable Themes:** Choose between light and dark themes
-- **Easy Integration:** Simple shortcode implementation - just add `[bitcoin_converter]` anywhere
-- **Performance Optimized:** Smart caching system prevents API overload
-- **Internationalization Ready:** All strings are translatable
-- **Accessibility Compliant:** Proper ARIA labels and keyboard navigation support
-
-## Supported Currencies
-
-- **USD** - US Dollar
-- **EUR** - Euro
-- **GBP** - British Pound
-- **JPY** - Japanese Yen
-- **CAD** - Canadian Dollar
-- **AUD** - Australian Dollar
-- **CHF** - Swiss Franc
-- **CNY** - Chinese Yuan
-- **INR** - Indian Rupee
-- **BRL** - Brazilian Real
+- **Automatic Price Conversion:** Automatically converts product prices to Bitcoin using the latest exchange rates.
+- **Denomination Options:** Choose between BTC, mBTC, or sats as your preferred Bitcoin denomination.
+- **Show Fiat Price:** Display fiat price alongside Bitcoin price for customer convenience.
+- **Use Bitcoin as Unit of Account:** Optionally set Bitcoin as the unit of account for individual products.
+- **Customizable Exchange Rate Source:** Choose from CoinDesk, CoinGecko, or provide a custom exchange rate URL.
+- **Total Price in Bitcoin:** Display the total order price in Bitcoin on the checkout page.
 
 ## Installation
 
 1. Upload the `bitcoin-price-converter` folder to the `/wp-content/plugins/` directory, or install the plugin through the WordPress plugins screen directly.
 2. Activate the plugin through the 'Plugins' screen in WordPress.
-3. Use the shortcode `[bitcoin_converter]` in your posts, pages, or widgets to display the converter.
+3. Configure the plugin settings from the admin sidebar menu "WooCommerce > Bitcoin Converter."
+4. Choose your preferred Bitcoin denomination (BTC, mBTC, or sats) and enable/disable fiat price display.
+5. Optionally set Bitcoin as the unit of account for individual products in the product settings.
+6. Select the desired exchange rate source: CoinDesk, CoinGecko, or provide a custom URL.
 
 ## Usage
 
-### Basic Shortcode
-```
-[bitcoin_converter]
-```
+- Prices will be automatically converted to Bitcoin on the product, cart, and checkout pages.
+- Customers will see the converted price based on the selected denomination alongside the fiat price (if enabled).
 
-### With Custom Default Currency
-```
-[bitcoin_converter default_currency="EUR"]
-```
+## Plugin Settings
 
-### With Dark Theme
-```
-[bitcoin_converter theme="dark"]
-```
-
-### Full Customization
-```
-[bitcoin_converter default_currency="GBP" theme="dark"]
-```
-
-### Shortcode Parameters
-
-- **default_currency**: Set the default currency (default: USD)
-  - Available options: USD, EUR, GBP, JPY, CAD, AUD, CHF, CNY, INR, BRL
-- **theme**: Set the visual theme (default: light)
-  - Available options: light, dark
-
-## Plugin Features
-
-### Real-time Price Updates
-- Prices are automatically updated every 60 seconds
-- Uses the reliable CoinGecko API for accurate pricing data
-- Smart caching system reduces API calls and improves performance
-
-### User-Friendly Interface
-- Clean, intuitive design that matches most WordPress themes
-- Responsive layout that works on all screen sizes
-- Smooth animations and transitions for better user experience
-
-### Performance Optimized
-- Minimal resource usage with efficient caching
-- Only loads JavaScript and CSS when the widget is displayed
-- Optimized API calls with proper error handling
-
-## Technical Specifications
-
-- **WordPress Version:** 5.0 or higher
-- **PHP Version:** 7.4 or higher
-- **Browser Support:** All modern browsers including IE11+
-- **API Source:** CoinGecko API (free tier)
-- **Update Frequency:** Every 60 seconds with caching
-- **File Size:** Less than 50KB total
+- **Bitcoin Denomination:** Choose your preferred denomination of Bitcoin (BTC, mBTC, or sats).
+- **Show Fiat Price:** Enable/disable the display of fiat price alongside Bitcoin price.
+- **Exchange Rate Source:** Select the source of exchange rate data (CoinDesk, CoinGecko, or custom URL).
+- **Custom Exchange Rate URL:** If "Custom" is selected as the exchange rate source, provide the custom URL here.
 
 ## Support
 
@@ -126,15 +69,12 @@ Bitcoin Price Converter is an open-source project, and we welcome contributions 
 
 If you encounter any issues or have suggestions for improvements, feel free to submit a pull request or open an issue on the GitHub repository.
 
-## Reviews
-
-If you find Bitcoin Price Converter helpful, consider leaving a positive review on the [WordPress Plugin Page](https://wordpress.org/plugins/bitcoin-price-converter) to help others discover the plugin.
 
 ## Donations
 
 If you appreciate the work we put into developing and maintaining this plugin, you can support us:
 - **Bitcoin donations:** https://VEINTIUNO.btc.pub/participa/#patrocinador
-- **Geyser Fund:** [Bitcoin Price Converter Project](https://geyser.fund/project/bitcoinpriceconverterwordpressplugin)
+- **Geyser Fund:** https://geyser.fund/project/bitcoinpriceconverterwordpressplugin
 
 ## Follow Us
 
