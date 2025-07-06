@@ -11,9 +11,8 @@
 **License URI:** http://www.gnu.org/licenses/gpl-2.0.html  
 **Version:** 1.1.5  
 
-Converts WooCommerce product prices to Bitcoin using real-time exchange rates. This plugin allows customers to view prices in Bitcoin with the selected denomination (BTC, mBTC, or sats) and displays the equivalent fiat price alongside it.
-
 ## Description
+Converts WooCommerce product prices to Bitcoin using real-time exchange rates. This plugin allows customers to view prices in Bitcoin with the selected denomination (BTC, mBTC, or sats) and displays the equivalent fiat price alongside it.
 
 Settings available from the admin sidebar menu: [Woocommerce > Bitcoin Converter](wp-admin/admin.php?page=bitcoin_price_converter_settings)
 
