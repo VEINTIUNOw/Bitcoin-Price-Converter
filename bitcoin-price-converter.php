@@ -3,460 +3,146 @@
 Plugin Name: Bitcoin Price Converter
 Plugin URI: https://wordpress.org/plugins/bitcoin-price-converter
 Description: Converts WooCommerce product prices to Bitcoin using exchange rates. Settings available from the admin sidebar menu <code> <a href="/wp-admin/admin.php?page=bitcoin_price_converter_settings">Woocommerce > Bitcoin Converter</a> </code>.
-Version: 1.1.5
+Version: 1.2
 Author: VEINTIUNOw
 Author URI: http://VEINTIUO.BTC.pub
 */
 
-// Prevent direct access
-if (!defined('ABSPATH')) {
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly
 }
 
-// Enqueue Font Awesome script
-add_action('wp_enqueue_scripts', 'bitcoin_price_converter_enqueue_fontawesome');
-function bitcoin_price_converter_enqueue_fontawesome() {
-    wp_enqueue_script('font-awesome', 'https://kit.fontawesome.com/090ca49637.js', array(), '5.15.3', false);
+add_action( 'plugins_loaded', 'woocommerce_btc_prices_init' );
+add_action( 'wp_enqueue_scripts', 'woocommerce_btc_enqueue_fontawesome' );
+
+function woocommerce_btc_prices_init() {
+    if ( ! class_exists( 'WooCommerce' ) ) {
+        return;
+    }
+
+    add_filter( 'woocommerce_currency_symbol', 'woocommerce_btc_currency_symbol', 10, 2 );
+    add_filter( 'woocommerce_get_price_html', 'woocommerce_btc_price_html', 10, 2 );
+    add_filter( 'woocommerce_cart_item_price', 'woocommerce_btc_cart_item_price', 10, 3 );
+    add_filter( 'woocommerce_cart_subtotal', 'woocommerce_btc_cart_subtotal', 10, 2 );
+    add_filter( 'woocommerce_checkout_item_quantity', 'woocommerce_btc_checkout_item_quantity', 10, 3 );
+    add_filter( 'woocommerce_checkout_item_subtotal', 'woocommerce_btc_checkout_item_subtotal', 10, 3 );
+    add_filter( 'woocommerce_get_order_item_totals', 'woocommerce_btc_checkout_item_totals', 10, 3 );
+    add_filter( 'woocommerce_currencies', 'woocommerce_btc_add_currency' );
+    add_filter( 'woocommerce_currency_symbol_position', 'woocommerce_btc_currency_symbol_position', 10, 2 );
 }
 
-// Add Bitcoin price conversion to WooCommerce product display
-add_filter('woocommerce_get_price_html', 'convert_price_to_bitcoin', 10, 2);
-function convert_price_to_bitcoin($price_html, $product) {
-    // Early return if product price is not available
-    if (!$product || !$product->get_price()) {
-        return $price_html;
-    }
-    
-    $bitcoin_rate = get_bitcoin_exchange_rate();
-    
-    // Check if bitcoin rate is valid and not zero
-    if (!$bitcoin_rate || $bitcoin_rate <= 0) {
-        return $price_html;
-    }
-
-    $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
-    $show_fiat_price = get_option('show_fiat_price', true);
-    $price = floatval($product->get_price());
-    
-    // Additional safety check
-    if ($price <= 0) {
-        return $price_html;
-    }
-    
-    $price_in_bitcoin = $price / $bitcoin_rate;
-    $formatted_price = format_bitcoin_price($price_in_bitcoin, $bitcoin_denomination);
-
-    $converted_price_html = $formatted_price;
-    if ($show_fiat_price) {
-        $converted_price_html .= ' <br/><small class="grey">' . $price_html . '</small>';
-    }
-
-    return $converted_price_html;
+function woocommerce_btc_enqueue_fontawesome() {
+    wp_enqueue_script( 'fontawesome', 'https://kit.fontawesome.com/090ca49637.js', array(), null, true );
 }
 
-// Convert prices on the cart and checkout pages
-add_filter('woocommerce_cart_item_price', 'convert_cart_item_price', 10, 3);
-add_filter('woocommerce_checkout_cart_item_quantity', 'convert_cart_item_price', 10, 3);
-function convert_cart_item_price($price_html, $cart_item, $cart_item_key) {
-    if (!isset($cart_item['data'])) {
-        return $price_html;
+function woocommerce_btc_currency_symbol( $currency_symbol, $currency ) {
+    if ( $currency === 'BTC' ) {
+        return '<i class="fak fa-satoshisymbol-solid"></i>';
     }
-    
-    $product = $cart_item['data'];
-    $price = floatval($product->get_price());
-    
-    if ($price <= 0) {
-        return $price_html;
-    }
-    
-    $bitcoin_rate = get_bitcoin_exchange_rate();
-    
-    if (!$bitcoin_rate || $bitcoin_rate <= 0) {
-        return $price_html;
-    }
-
-    $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
-    $price_in_bitcoin = $price / $bitcoin_rate;
-    $converted_price_html = format_bitcoin_price($price_in_bitcoin, $bitcoin_denomination);
-
-    return $converted_price_html;
+    return $currency_symbol;
 }
 
-// Convert prices on the cart and checkout totals
-add_filter('woocommerce_cart_item_subtotal', 'convert_cart_totals', 10, 3);
-add_filter('woocommerce_checkout_cart_subtotal', 'convert_cart_totals', 10, 3);
-function convert_cart_totals($subtotal_html, $cart_item, $cart_item_key) {
-    if (!isset($cart_item['line_total'])) {
-        return $subtotal_html;
+function woocommerce_btc_price_html( $price, $product ) {
+    $exchange_rate = woocommerce_btc_get_exchange_rate();
+    if ( $exchange_rate == 0 ) {
+        return $price; // Return the original price if exchange rate fetch fails
     }
-    
-    $price = floatval($cart_item['line_total']);
-    
-    if ($price <= 0) {
-        return $subtotal_html;
-    }
-    
-    $bitcoin_rate = get_bitcoin_exchange_rate();
-    
-    if (!$bitcoin_rate || $bitcoin_rate <= 0) {
-        return $subtotal_html;
-    }
+    $btc_price = $product->get_price() / $exchange_rate;
+    $satoshi_price = $btc_price * 100000000; // Convert BTC to satoshi
 
-    $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
-    $price_in_bitcoin = $price / $bitcoin_rate;
-    $converted_price_html = format_bitcoin_price($price_in_bitcoin, $bitcoin_denomination);
-
-    return $converted_price_html;
+    return wc_price( $satoshi_price, array( 'currency' => 'BTC', 'decimal_separator' => '.', 'thousand_separator' => ',', 'decimals' => 0 ) );
 }
 
-// Get the current Bitcoin exchange rate from the selected source or custom URL
-function get_bitcoin_exchange_rate() {
-    $exchange_rate_source = get_option('exchange_rate_source', 'coindesk');
-    $stored_exchange_rate = get_option('bitcoin_exchange_rate');
-    $stored_exchange_rate_timestamp = get_option('bitcoin_exchange_rate_timestamp');
-    $current_timestamp = time();
-    $ten_minutes_in_seconds = 10 * 60; // 10 minutes
-
-    // Return cached rate if it's still valid and not zero
-    if ($stored_exchange_rate && $stored_exchange_rate > 0 && ($current_timestamp - $stored_exchange_rate_timestamp) < $ten_minutes_in_seconds) {
-        return $stored_exchange_rate;
+function woocommerce_btc_cart_item_price( $price, $cart_item, $cart_item_key ) {
+    $exchange_rate = woocommerce_btc_get_exchange_rate();
+    if ( $exchange_rate == 0 ) {
+        return $price; // Return the original price if exchange rate fetch fails
     }
+    $btc_price = $cart_item['data']->get_price() / $exchange_rate;
+    $satoshi_price = $btc_price * 100000000; // Convert BTC to satoshi
 
-    $api_url = '';
-    switch ($exchange_rate_source) {
-        case 'coindesk':
-            $api_url = 'https://api.coindesk.com/v1/bpi/currentprice/USD.json';
-            break;
-        case 'coingecko':
-            $api_url = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd';
-            break;
-        case 'custom':
-            $api_url = get_option('custom_exchange_rate_url');
-            break;
+    return wc_price( $satoshi_price, array( 'currency' => 'BTC', 'decimal_separator' => '.', 'thousand_separator' => ',', 'decimals' => 0 ) );
+}
+
+function woocommerce_btc_cart_subtotal( $subtotal, $compact ) {
+    $exchange_rate = woocommerce_btc_get_exchange_rate();
+    if ( $exchange_rate == 0 ) {
+        return $subtotal; // Return the original subtotal if exchange rate fetch fails
     }
+    $btc_subtotal = WC()->cart->cart_contents_total / $exchange_rate;
+    $satoshi_subtotal = $btc_subtotal * 100000000; // Convert BTC to satoshi
 
-    if (empty($api_url)) {
-        error_log('Bitcoin Price Converter: No valid API URL configured');
-        return false;
+    return wc_price( $satoshi_subtotal, array( 'currency' => 'BTC', 'decimal_separator' => '.', 'thousand_separator' => ',', 'decimals' => 0 ) );
+}
+
+function woocommerce_btc_checkout_item_quantity( $product_quantity, $item, $order ) {
+    $exchange_rate = woocommerce_btc_get_exchange_rate();
+    if ( $exchange_rate == 0 ) {
+        return $product_quantity; // Return the original quantity if exchange rate fetch fails
     }
+    $btc_price = $item->get_total() / $exchange_rate;
+    $satoshi_price = $btc_price * 100000000; // Convert BTC to satoshi
 
-    $response = wp_remote_get($api_url, array(
-        'timeout' => 15,
-        'headers' => array(
-            'User-Agent' => 'WordPress/Bitcoin-Price-Converter-Plugin'
-        )
-    ));
-    
-    if (is_wp_error($response)) {
-        error_log('Bitcoin Price Converter: API request failed - ' . $response->get_error_message());
-        return false;
+    return wc_price( $satoshi_price, array( 'currency' => 'BTC', 'decimal_separator' => '.', 'thousand_separator' => ',', 'decimals' => 0 ) );
+}
+
+function woocommerce_btc_checkout_item_subtotal( $subtotal, $item, $order ) {
+    $exchange_rate = woocommerce_btc_get_exchange_rate();
+    if ( $exchange_rate == 0 ) {
+        return $subtotal; // Return the original subtotal if exchange rate fetch fails
     }
+    $btc_subtotal = $item->get_subtotal() / $exchange_rate;
+    $satoshi_subtotal = $btc_subtotal * 100000000; // Convert BTC to satoshi
 
-    $response_code = wp_remote_retrieve_response_code($response);
-    if ($response_code !== 200) {
-        error_log('Bitcoin Price Converter: API returned status code ' . $response_code);
-        return false;
-    }
+    return wc_price( $satoshi_subtotal, array( 'currency' => 'BTC', 'decimal_separator' => '.', 'thousand_separator' => ',', 'decimals' => 0 ) );
+}
 
-    $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body, true);
-
-    if (!$data || !is_array($data)) {
-        error_log('Bitcoin Price Converter: Invalid JSON response');
-        return false;
-    }
-
-    $rate = false;
-    switch ($exchange_rate_source) {
-        case 'coindesk':
-            $rate = isset($data['bpi']['USD']['rate_float']) ? floatval($data['bpi']['USD']['rate_float']) : false;
-            break;
-        case 'coingecko':
-            $rate = isset($data['bitcoin']['usd']) ? floatval($data['bitcoin']['usd']) : false;
-            break;
-        case 'custom':
-            // For custom APIs, try to find a numeric value
-            if (isset($data['rate'])) {
-                $rate = floatval($data['rate']);
-            } elseif (isset($data['price'])) {
-                $rate = floatval($data['price']);
-            } elseif (isset($data['usd'])) {
-                $rate = floatval($data['usd']);
+function woocommerce_btc_checkout_item_totals( $total_rows, $order, $tax_display ) {
+    foreach ( $total_rows as $key => $total ) {
+        if ( 'order_total' === $key ) {
+            $exchange_rate = woocommerce_btc_get_exchange_rate();
+            if ( $exchange_rate == 0 ) {
+                continue; // Skip if exchange rate fetch fails
             }
-            break;
-    }
+            $btc_total = $order->get_total() / $exchange_rate;
+            $satoshi_total = $btc_total * 100000000; // Convert BTC to satoshi
 
-    if ($rate && $rate > 0) {
-        update_option('bitcoin_exchange_rate', $rate);
-        update_option('bitcoin_exchange_rate_timestamp', $current_timestamp);
-        return $rate;
-    } else {
-        error_log('Bitcoin Price Converter: Could not parse rate from API response');
-        return false;
-    }
-}
-
-// Format the Bitcoin price based on the selected denomination
-function format_bitcoin_price($price, $denomination) {
-    if (!is_numeric($price) || $price <= 0) {
-        return 'N/A';
-    }
-    
-    switch ($denomination) {
-        case 'mBTC':
-            $formatted_price = number_format($price * 1000, 2, '.', ',') . ' mBTC';
-            break;
-        case 'sats':
-            $formatted_price = number_format($price * 100000000, 0, '.', ',') . ' sats';
-            break;
-        case 'BTC':
-        default:
-            $formatted_price = '₿ ' . number_format($price, 8, '.', ',');
-            break;
-    }
-
-    return $formatted_price;
-}
-
-// Add plugin settings page to the admin menu
-add_action('admin_menu', 'bitcoin_price_converter_settings_page');
-function bitcoin_price_converter_settings_page() {
-    add_submenu_page(
-        'woocommerce',
-        'Bitcoin Price Converter Settings',
-        'Bitcoin Converter',
-        'manage_options',
-        'bitcoin_price_converter_settings',
-        'bitcoin_price_converter_settings_callback'
-    );
-}
-
-// Callback function to render the plugin settings page
-function bitcoin_price_converter_settings_callback() {
-    if (!current_user_can('manage_options')) {
-        return;
-    }
-
-    if (isset($_POST['submit'])) {
-        // Verify nonce for security
-        if (!isset($_POST['bitcoin_converter_nonce']) || !wp_verify_nonce($_POST['bitcoin_converter_nonce'], 'bitcoin_converter_settings')) {
-            wp_die('Security check failed');
+            $total_rows[$key]['value'] = wc_price( $satoshi_total, array( 'currency' => 'BTC', 'decimal_separator' => '.', 'thousand_separator' => ',', 'decimals' => 0 ) ) . ' (' . wc_price( $order->get_total(), array( 'currency' => get_woocommerce_currency() ) ) . ')';
         }
-        
-        update_option('bitcoin_denomination', sanitize_text_field($_POST['bitcoin_denomination']));
-        update_option('show_fiat_price', isset($_POST['show_fiat_price']));
-        update_option('exchange_rate_source', sanitize_text_field($_POST['exchange_rate_source']));
-        
-        if ($_POST['exchange_rate_source'] === 'custom') {
-            update_option('custom_exchange_rate_url', esc_url_raw($_POST['custom_exchange_rate_url']));
+    }
+    return $total_rows;
+}
+
+function woocommerce_btc_get_exchange_rate() {
+    $transient_name = 'woocommerce_btc_exchange_rate';
+    $exchange_rate = get_transient( $transient_name );
+
+    if ( false === $exchange_rate ) {
+        $response = wp_remote_get( 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=USD' );
+        if ( is_wp_error( $response ) ) {
+            return 0; // Return 0 or handle the error as needed
+        }
+        $body = wp_remote_retrieve_body( $response );
+        $data = json_decode( $body, true );
+        if ( isset( $data['bitcoin']['usd'] ) ) {
+            $exchange_rate = $data['bitcoin']['usd'];
+            set_transient( $transient_name, $exchange_rate, HOUR_IN_SECONDS );
         } else {
-            delete_option('custom_exchange_rate_url');
-        }
-        
-        // Clear cached exchange rate when settings change
-        delete_option('bitcoin_exchange_rate');
-        delete_option('bitcoin_exchange_rate_timestamp');
-        
-        echo '<div class="notice notice-success"><p>Settings saved successfully!</p></div>';
-    }
-    
-    // Test API connection
-    if (isset($_POST['test_api'])) {
-        if (!isset($_POST['bitcoin_converter_nonce']) || !wp_verify_nonce($_POST['bitcoin_converter_nonce'], 'bitcoin_converter_settings')) {
-            wp_die('Security check failed');
-        }
-        
-        // Clear cache to force fresh API call
-        delete_option('bitcoin_exchange_rate');
-        delete_option('bitcoin_exchange_rate_timestamp');
-        
-        $rate = get_bitcoin_exchange_rate();
-        if ($rate && $rate > 0) {
-            echo '<div class="notice notice-success"><p>API connection successful! Current rate: $' . number_format($rate, 2) . '</p></div>';
-        } else {
-            echo '<div class="notice notice-error"><p>API connection failed. Please check your settings and try again.</p></div>';
+            $exchange_rate = 0; // Handle the error as needed
         }
     }
 
-    $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
-    $show_fiat_price = get_option('show_fiat_price', true);
-    $exchange_rate_source = get_option('exchange_rate_source', 'coindesk');
-    $custom_exchange_rate_url = get_option('custom_exchange_rate_url', '');
-    $sample_fiat_price = 1;
-    $current_rate = get_bitcoin_exchange_rate();
-    $sample_price_in_bitcoin = $current_rate ? $sample_fiat_price / $current_rate : 0;
-    ?>
-    <div class="wrap">
-        <h1>Bitcoin Price Converter Settings</h1>
-        
-        <?php if ($current_rate): ?>
-            <h2>Current Exchange Rate</h2>
-            <p><strong>1 BTC = $<?php echo number_format($current_rate, 2); ?></strong></p>
-            
-            <h2>Preview</h2>
-            <p>Sample Price in Fiat: $<?php echo number_format($sample_fiat_price, 2, '.', ','); ?></p>
-            <p>Sample Price in Bitcoin: <?php echo format_bitcoin_price($sample_price_in_bitcoin, 'BTC'); ?></p>
-            <p>Sample Price in milli Bitcoin: <?php echo format_bitcoin_price($sample_price_in_bitcoin, 'mBTC'); ?></p>
-            <p>Sample Price in satoshis: <?php echo format_bitcoin_price($sample_price_in_bitcoin, 'sats'); ?></p>
-        <?php else: ?>
-            <div class="notice notice-warning">
-                <p><strong>Warning:</strong> Unable to fetch current Bitcoin exchange rate. Please check your API settings.</p>
-            </div>
-        <?php endif; ?>
-        
-        <hr>
-        
-        <form method="post" action="">
-            <?php wp_nonce_field('bitcoin_converter_settings', 'bitcoin_converter_nonce'); ?>
-            
-            <table class="form-table">
-                <tr valign="top">
-                    <th scope="row">Bitcoin Denomination</th>
-                    <td>
-                        <select name="bitcoin_denomination">
-                            <option value="BTC" <?php selected($bitcoin_denomination, 'BTC'); ?>>Bitcoin (₿)</option>
-                            <option value="mBTC" <?php selected($bitcoin_denomination, 'mBTC'); ?>>milli Bitcoin (mBTC)</option>
-                            <option value="sats" <?php selected($bitcoin_denomination, 'sats'); ?>>Satoshi (sats)</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr valign="top">
-                    <th scope="row">Show Fiat Price</th>
-                    <td>
-                        <label>
-                            <input type="checkbox" name="show_fiat_price" value="1" <?php checked($show_fiat_price); ?>>
-                            Display fiat price alongside Bitcoin price
-                        </label>
-                    </td>
-                </tr>
-                <tr valign="top">
-                    <th scope="row">Exchange Rate Source</th>
-                    <td>
-                        <select name="exchange_rate_source" id="exchange_rate_source">
-                            <option value="coindesk" <?php selected($exchange_rate_source, 'coindesk'); ?>>CoinDesk</option>
-                            <option value="coingecko" <?php selected($exchange_rate_source, 'coingecko'); ?>>CoinGecko</option>
-                            <option value="custom" <?php selected($exchange_rate_source, 'custom'); ?>>Custom URL</option>
-                        </select>
-                    </td>
-                </tr>
-                <tr valign="top" id="custom_url_row" style="<?php echo ($exchange_rate_source === 'custom') ? '' : 'display: none;'; ?>">
-                    <th scope="row">Custom Exchange Rate URL</th>
-                    <td>
-                        <input type="url" name="custom_exchange_rate_url" value="<?php echo esc_attr($custom_exchange_rate_url); ?>" placeholder="https://api.example.com/bitcoin/price" style="width: 100%; max-width: 400px;">
-                        <p class="description">Enter a URL that returns JSON with Bitcoin price data.</p>
-                    </td>
-                </tr>
-            </table>
-            
-            <p class="submit">
-                <input type="submit" name="submit" class="button-primary" value="Save Settings">
-                <input type="submit" name="test_api" class="button-secondary" value="Test API Connection" style="margin-left: 10px;">
-            </p>
-        </form>
-    </div>
-    
-    <script>
-        (function ($) {
-            $(document).ready(function () {
-                var exchangeRateSource = $('#exchange_rate_source');
-                var customUrlRow = $('#custom_url_row');
-                
-                exchangeRateSource.on('change', function () {
-                    if (exchangeRateSource.val() === 'custom') {
-                        customUrlRow.show();
-                    } else {
-                        customUrlRow.hide();
-                    }
-                });
-            });
-        })(jQuery);
-    </script>
-    <?php
+    return $exchange_rate;
 }
 
-// Add Bitcoin as Unit of Account in product settings
-add_action('woocommerce_product_options_pricing', 'add_bitcoin_as_unit_of_account');
-function add_bitcoin_as_unit_of_account() {
-    woocommerce_wp_checkbox(array(
-        'id' => '_bitcoin_as_unit_of_account',
-        'label' => 'Use Bitcoin as Unit of Account',
-        'description' => 'Enable this option to set Bitcoin as the unit of account for this product.',
-        'desc_tip' => true,
-    ));
+function woocommerce_btc_add_currency( $currencies ) {
+    $currencies['BTC'] = 'Bitcoin';
+    return $currencies;
 }
 
-// Save Bitcoin as Unit of Account option when product is saved
-add_action('woocommerce_process_product_meta', 'save_bitcoin_as_unit_of_account');
-function save_bitcoin_as_unit_of_account($post_id) {
-    $bitcoin_as_unit_of_account = isset($_POST['_bitcoin_as_unit_of_account']) ? 'yes' : 'no';
-    update_post_meta($post_id, '_bitcoin_as_unit_of_account', $bitcoin_as_unit_of_account);
-}
-
-// Display Bitcoin denomination in product price
-add_filter('woocommerce_get_price_html', 'display_bitcoin_denomination_in_price', 100, 2);
-function display_bitcoin_denomination_in_price($price_html, $product) {
-    $bitcoin_as_unit_of_account = get_post_meta($product->get_id(), '_bitcoin_as_unit_of_account', true);
-    if ($bitcoin_as_unit_of_account === 'yes') {
-        $bitcoin_rate = get_bitcoin_exchange_rate();
-        if ($bitcoin_rate && $bitcoin_rate > 0) {
-            $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
-            $price_in_bitcoin = $product->get_price() / $bitcoin_rate;
-            $price_html = '(' . format_bitcoin_price($price_in_bitcoin, $bitcoin_denomination) . ')';
-        }
+function woocommerce_btc_currency_symbol_position( $position, $currency ) {
+    if ( $currency === 'BTC' ) {
+        return 'left';
     }
-    return $price_html;
-}
-
-// Display Total Price in Bitcoin on the checkout page
-add_action('woocommerce_review_order_after_order_total', 'display_total_price_in_bitcoin');
-function display_total_price_in_bitcoin() {
-    if (!WC()->cart) {
-        return;
-    }
-    
-    $total_price_in_fiat = WC()->cart->total;
-    
-    if ($total_price_in_fiat <= 0) {
-        return;
-    }
-    
-    $bitcoin_rate = get_bitcoin_exchange_rate();
-    if (!$bitcoin_rate || $bitcoin_rate <= 0) {
-        return;
-    }
-
-    $bitcoin_denomination = get_option('bitcoin_denomination', 'BTC');
-    $total_price_in_bitcoin = $total_price_in_fiat / $bitcoin_rate;
-    $total_price_html = format_bitcoin_price($total_price_in_bitcoin, $bitcoin_denomination);
-    ?>
-    <tr>
-        <th><?php _e('Total Price in Bitcoin', 'bitcoin-price-converter'); ?></th>
-        <td><?php echo $total_price_html; ?></td>
-    </tr>
-    <?php
-}
-
-// Update plugin version
-add_action('plugins_loaded', 'update_bitcoin_price_converter_version');
-function update_bitcoin_price_converter_version() {
-    $current_version = get_option('bitcoin_price_converter_version', '1.0.0');
-    $new_version = '1.1.5';
-    if ($current_version !== $new_version) {
-        update_option('bitcoin_price_converter_version', $new_version);
-    }
-}
-
-// Add admin notice for configuration
-add_action('admin_notices', 'bitcoin_price_converter_admin_notice');
-function bitcoin_price_converter_admin_notice() {
-    $screen = get_current_screen();
-    if ($screen && strpos($screen->id, 'woocommerce') !== false) {
-        $rate = get_bitcoin_exchange_rate();
-        if (!$rate || $rate <= 0) {
-            echo '<div class="notice notice-warning is-dismissible">';
-            echo '<p><strong>Bitcoin Price Converter:</strong> Unable to fetch Bitcoin exchange rate. ';
-            echo '<a href="' . admin_url('admin.php?page=bitcoin_price_converter_settings') . '">Check your settings</a></p>';
-            echo '</div>';
-        }
-    }
+    return $position;
 }
