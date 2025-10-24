@@ -1,11 +1,11 @@
 # Bitcoin Price Converter
 
 ## Description
-Converts WooCommerce product prices to Bitcoin using real-time exchange rates. This plugin allows customers to view prices in Bitcoin with the selected denomination (BTC, mBTC, or sats) and displays the equivalent fiat price alongside it.
+Converts WooCommerce product prices to Bitcoin using real-time exchange rates. This plugin allows customers to view prices in Bitcoin with the preselected Satoshi denomination.
 
 - **Source code on [GitHub](https://github.com/VEINTIUNOw/Bitcoin-Price-Converter)**
 - **Demo on [site](https://veintiuno.BTC.pub/m/digitales/bitcoin-price-co%E2%80%A6ocommerce-plugin/)**
-- **Donate sats or contribute from https://VEINTIUNO.btc.pub/participa/#patrocinador
+- **Donate** sats or contribute from https://VEINTIUNO.btc.pub/participa/#patrocinador
 
 
 ## Contributing
